@@ -1,39 +1,34 @@
-# Seme Framework
+# Seme Framework v4.0.0 DataTable Demo
 
-[![Build Status](https://travis-ci.org/drosanda/seme-framework.svg?branch=master)](https://travis-ci.org/drosanda/seme-framework) [![Coverage Status](https://coveralls.io/repos/github/drosanda/seme-framework/badge.svg?branch=master)](https://coveralls.io/github/drosanda/seme-framework?branch=master)
+Here is dataTable demo by using Seme Framework version 4.0.0 with bootstrap3.
 
-Seme Framework PHP MVC Framework for creating small and medium app that needed for fast delivery. At first version of Seme Framework used for building API (Middle Ware) for another Application such as android, iOS, etc. And now as increasing of requirement, Seme Framework has expand the limit for creating Small and Medium App.
-
-## Documentation
+## Seme Framework Documentation
 
 Read the official documentation at [seme.framework.web.id](https://seme.framework.web.id). Now only available in English.
 
-## Version
+## Bootstrap3
 
-Latest version of Seme Framework
+Bootstrap version 3.4 https://getbootstrap.com/docs/3.4/
 
-### Change Log
+## jQuery
 
-here is the changelog :
+jQuery 3.5.1
 
-- remove assets directory from framework dependency
-- remove many configuration files only into single file configuration separated by environment type.
+## datatables
 
-## Key Feature
+DataTables version 1.10.22 https://www.datatables.net/
 
-This framework suitable for Programmer that only know about Manual way of code. Not like this time, everything build up automatically through console. Seme Framework has taken different way of code, If you want build small app, why we need lots of library. Here is the key feature of Seme Framework:
+## datepicker
 
-- Small but not Tiny. Seme Framework growth on SME Industries with many requirement but can suppress the hosting price.
-- Not Too serious. You can played with Seme Framework at your own logic. Its free and almost has no restriction to developing your solution.
-- Admin Friendly. Seme Framework has re-routing feature for admin page, without refactoring the MVC.
-- Theme Engine. Seme Framework has feature who can PUSH the content inside the layout view. Also support theming engine, if you want change the Style, you just clone the original one and modified safely.
+Datepicker v1.0.10 https://fengyuanchen.github.io/datepicker
 
-## Testing
-To run the testing, please change to your framework working directory and then executed the command.
+## NProgress
 
-```CLI
-phpunit --configuration phpunit.xml --testsuite Dev
-```
+NProgress https://github.com/rstacruz/nprogress
+
+## Bootstrap Growl / jQuery Gritter / Toast
+
+Bootstrap Growl https://github.com/ifightcrime/bootstrap-growl
 
 ## License
 
