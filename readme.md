@@ -2,6 +2,22 @@
 
 Here is dataTable demo by using Seme Framework version 4.0.0 with bootstrap3.
 
+## Install
+
+Download or Clone this repository to your directory. e.g. D:\xammp\htdocs\seme_framework
+
+### Create database
+
+Creating database called seme_framework. If you change database name, you should edit the config file on D:\xammp\htdocs\seme_framework\app\config\development.php
+
+### Import the SQL
+
+Import the database from sql directory, e.g.  D:\xammp\htdocs\seme_framework\sql
+
+## Running
+
+After install, just open the framework through your favorite browser. e.g. http://localhost/seme_framework/
+
 ## Seme Framework Documentation
 
 Read the official documentation at [seme.framework.web.id](https://seme.framework.web.id). Now only available in English.
