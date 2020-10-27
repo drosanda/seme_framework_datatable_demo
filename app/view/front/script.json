@@ -1,0 +1,10 @@
+[
+  "<script src=\"{{base_url}}skin/front/js/vendor/nprogress.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/vendor/jquery.min.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/vendor/jquery.bootstrap-growl.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/vendor/jquery.timeago.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/vendor/quill.min.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/bootstrap.min.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/datepicker.min.js\"><\/script>",
+  "<script src=\"{{base_url}}skin/front/js/datatables.min.js\"><\/script>"
+]
