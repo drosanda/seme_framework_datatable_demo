@@ -1,6 +1,8 @@
 # Seme Framework v4.0.0 DataTable Demo
 
 Here is dataTable demo by using Seme Framework version 4.0.0 with bootstrap3.
+On this demo, we will show you how to implement dataTable server side data source with filtering, sorting, and addtional interface like NProgress also Gritter / Growl. You also can download the data source in the excel format using PHPOffice/Spreadsheet.
+
 
 ## Install
 
