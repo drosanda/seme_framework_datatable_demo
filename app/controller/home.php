@@ -302,4 +302,104 @@ class Home extends SENE_Controller
 
     $this->__forceDownload($save_dir.'/'.$save_file.'.xlsx');
   }
+
+  public function download_pdf()
+  {
+    $is_active = $this->input->request("is_active");
+    if(strlen($is_active)!=0) {
+      if(!empty($is_active)){
+        $is_active = 1;
+      }else{
+        $is_active = 0;
+      }
+    }else{
+      $is_active = '';
+    }
+    $scdate = $this->input->request("scdate");
+    if (strlen($scdate)==10) {
+      $scdate = date("Y-m-d", strtotime($scdate));
+    }else{
+      $scdate = '';
+    }
+
+    $ecdate = $this->input->request("ecdate");
+    if (strlen($ecdate)==10) {
+      $ecdate = date("Y-m-d", strtotime($ecdate));
+    }else{
+      $ecdate = '';
+    }
+    $p = 'Periode: selama ini';
+    if(strlen($scdate) && strlen($ecdate)){
+      $p = 'Periode: '.$this->__dateIndonesia($scdate,'tanggal').' s.d. '.$this->__dateIndonesia($ecdate,'tanggal');
+    }elseif(strlen($scdate)==0 && strlen($ecdate)!=0){
+      $p = 'Periode: sampai '.$ecdate;
+    }elseif(strlen($scdate)!=0 && strlen($ecdate)==1){
+      $p = 'Periode: mulai '.$ecdate;
+    }elseif(strlen($scdate)!=0 && $scdate == $ecdate){
+      $p = 'Tanggal: '.$scdate;
+    }else{
+      $p = '';
+    }
+
+    $data = $this->bum->xls($scdate,$ecdate,$is_active);
+    foreach($data as &$dr){
+      if(isset($dr->is_active)){
+        if(empty($dr->is_active)){
+          $dr->is_active = 'Non Aktif';
+        }else{
+          $dr->is_active = 'Aktif';
+        }
+      }
+      if(isset($dr->cdate)){
+        if(strlen($dr->cdate)==10){
+          $dr->cdate = $this->__dateIndonesia($dr->cdate, 'hari_tanggal');
+        }else{
+          $dr->cdate = '-';
+        }
+      }
+    }
+
+    $defObj = array();
+    $i = 0;
+    $defObj[$i] = new stdClass();
+    $defObj[$i]->nama = 'ID';
+    $defObj[$i]->width = '7';
+    $defObj[$i]->align = 'C';
+    $i++;
+    $defObj[$i] = new stdClass();
+    $defObj[$i]->nama = 'Nama';
+    $defObj[$i]->width = '65';
+    $defObj[$i]->align = 'L';
+    $i++;
+    $defObj[$i] = new stdClass();
+    $defObj[$i]->nama = 'Alamat';
+    $defObj[$i]->width = '45';
+    $defObj[$i]->align = 'L';
+    $i++;
+    $defObj[$i] = new stdClass();
+    $defObj[$i]->nama = 'Tgl Daftar';
+    $defObj[$i]->width = '40';
+    $defObj[$i]->align = 'L';
+    $i++;
+    $defObj[$i] = new stdClass();
+    $defObj[$i]->nama = 'Status';
+    $defObj[$i]->width = '18';
+    $defObj[$i]->align = 'C';
+
+    //create object pdf
+    $judul = 'Laporan User';
+    $this->lib('seme_page_fpdf');
+    $pdf = new Seme_page_FPDF();
+    $pdf->load_data($judul,$data,$defObj,$p);
+    $filename = str_replace(' ','',strtolower($judul));
+    $pdf->Output('I',$filename);
+  }
+  public function pdf(){
+    $this->lib('seme_fpdf');
+    $pdf = new Seme_FPDF();
+    $pdf->AddPage();
+    $pdf->SetFont('Arial','B',16);
+    $pdf->Cell(40,10,'Hello World!');
+    $pdf->Output();
+  }
 }

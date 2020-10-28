@@ -64,3 +64,21 @@ $("#fl_download_xls").on("click",function(e){
 		window.location='<?=base_url('home/download_xls/?') ?>'+params;
 	},333);
 });
+
+
+$("#fl_download_pdf").on("click",function(e){
+	e.preventDefault();
+	NProgress.start();
+	gritter('<h4>Silakan tunggu</h4><p>Memproses filter download</p>','info');
+
+	var params = '';
+	params += 'scdate='+encodeURIComponent($("#fl_scdate").val())+'&';
+	params += 'ecdate='+encodeURIComponent($("#fl_ecdate").val())+'&';
+	params += 'is_active='+encodeURIComponent($("#fl_is_active").val())+'&';
+
+	params = params.slice(0, -1);
+	setTimeout(function(){
+    NProgress.done();
+		window.location='<?=base_url('home/download_pdf/?') ?>'+params;
+	},333);
+});

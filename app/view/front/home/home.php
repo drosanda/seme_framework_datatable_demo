@@ -22,7 +22,8 @@
     <div class="col-md-2" style="">
       <div class="btn-group pull-right">
         <button type="button" id="fl_download_xls" class="btn btn-default"><i class="fa fa-download"></i> XLS</button>
-        <button type="button" id="fl_btn" class="btn btn-default"><i class="fa fa-filter"></i> Filter</button>
+        <button type="button" id="fl_download_pdf" class="btn btn-default"><i class="fa fa-download"></i> PDF</button>
+        <button type="button" id="fl_btn" class="btn btn-default"><i class="fa fa-filter"></i></button>
       </div>
     </div>
   </div>
