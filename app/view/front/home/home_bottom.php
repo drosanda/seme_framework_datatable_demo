@@ -41,7 +41,7 @@ if(jQuery('#drTable').length>0){
 				});
 			},
 	});
-	$('.dataTables_filter input').attr('placeholder', 'Cari');
+	$('.dataTables_filter input').attr('placeholder', 'Cari nama dan alamat');
 	$("#fl_btn").on("click",function(e){
 		e.preventDefault();
 		drTable.ajax.reload();

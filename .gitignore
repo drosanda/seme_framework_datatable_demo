@@ -4,3 +4,4 @@ docs/*
 *.phpdoc
 *.phpdoc/*
 .phpdoc
+*.xls*
