@@ -1,26 +1,34 @@
 <?php
 /**
+ * @author: Daeng Rosanda
+ * @package SemeFramework
+ * @since SemeFramework 2.0.0
+*/
+
+
+/**
  * Class model for  MySQLi connection
  */
+#[AllowDynamicProperties]
 class SENE_MySQLi_Engine
 {
     protected static $__instance;
-    protected $__mysqli;
+    public $__mysqli;
     protected $koneksi;
     protected $fieldname = array();
     protected $fieldvalue = array();
     public $last_id = 0;
-    public $in_select = "";
-    public $in_where = "";
-    public $in_order = "";
-    public $in_group = "";
-    public $table = "";
-    public $is_flush = "";
-    public $is_cache = "";
-    public $page = "";
-    public $pagesize = "";
-    public $cache_save = "";
-    public $cache_flush = "";
+    public $in_select = '';
+    public $in_where = '';
+    public $in_order = '';
+    public $in_group = '';
+    public $table = '';
+    public $is_flush = '';
+    public $is_cache = '';
+    public $page = '';
+    public $pagesize = '';
+    public $cache_save = '';
+    public $cache_flush = '';
     public $is_limit=0;
     public $tis_limit=0;
     public $limit_a=0;
@@ -33,26 +41,25 @@ class SENE_MySQLi_Engine
     public $query_last;
     public $is_debug;
 
-    public function __construct($db)
+    public function __construct()
     {
         $this->directories = $GLOBALS['SEMEDIR'];
         $this->config = $GLOBALS['SEMECFG'];
         $port = 3306;
-        if(isset($this->config->database->port)){
-          if(strlen($this->config->database->port)>0){
-            $port = $this->config->database->port;
-          }
+        if (isset($this->config->database->port)) {
+            if (strlen($this->config->database->port)>0) {
+                $port = $this->config->database->port;
+            }
         }
         mysqli_report(MYSQLI_REPORT_STRICT);
         $this->__mysqli = new mysqli();
         try {
             $this->__mysqli->connect($this->config->database->host, $this->config->database->user, $this->config->database->pass, $this->config->database->name, $port);
-        } catch (Exception $e) {
-          if($this->config->environment == 'development'){
-            trigger_error('Tidak dapat tersambung ke database.');
-            die();
-          }else if($this->config->environment == 'staging'){
-            if ($this->__mysqli->connect_errno) {
+        } catch (mysqli_sql_exception $e) {
+            if ($this->config->environment == 'development') {
+                trigger_error(TEM_ERR.': Cannot connect to database server using the supplied settings.', E_USER_ERROR);
+                throw $e;
+            } elseif ($this->config->environment == 'staging' && $this->__mysqli->connect_errno) {
                 header("content-type: application/json");
                 http_response_code(200);
                 $data = array();
@@ -60,25 +67,22 @@ class SENE_MySQLi_Engine
                 $data['message'] = 'Failed to connect to Database: '.$this->__mysqli->connect_error;
                 $data['data'] = array();
                 echo json_encode($data);
-                die();
+                return;
             }
-          }
         }
 
         $cs = 'utf8';
-        if(isset($this->config->database->charset)){
-          if(strlen($this->config->database->port)>0){
+        if (isset($this->config->database->charset) && strlen($this->config->database->port)>0) {
             $cs = $this->config->database->charset;
-          }
         }
         $this->__mysqli->set_charset($cs);
 
         self::$__instance = $this;
 
-        $this->in_select = "";
-        $this->in_where = "";
-        $this->in_order = "";
-        $this->table = "";
+        $this->in_select = '';
+        $this->in_where = '';
+        $this->in_order = '';
+        $this->table = '';
         $this->is_flush = 0;
         $this->is_cache = 0;
         $this->page = 0;
@@ -86,14 +90,15 @@ class SENE_MySQLi_Engine
         $this->cache_save = 0;
         $this->cache_flush = 0;
         $this->tis_limit = 0;
-        $in_join=0;
-        $in_join_mutli=0;
+        $this->in_join=0;
+        $this->in_join_multi=0;
         $this->as_from = array();
         $this->join = array();
         $this->join_multi = array();
-        $this->query_last = "";
+        $this->query_last = '';
         $this->is_debug = 1;
     }
+
     public static function getInstance()
     {
         return self::$_instance;
@@ -118,7 +123,7 @@ class SENE_MySQLi_Engine
     {
         return $this->__mysqli->savepoint($sp);
     }
-    public function debug($sql="")
+    public function debug($sql='')
     {
         $this->fieldname[] = 'error';
         $this->fieldname[] = 'code';
@@ -134,12 +139,12 @@ class SENE_MySQLi_Engine
             return 1;
         } else {
             if ($this->is_debug) {
-                trigger_error('Error: '.$this->__mysqli->error.' -- SQL: '.$sql);
+                trigger_error(TEM_ERR.': '.$this->__mysqli->error.'. '.$sql, E_USER_NOTICE);
             }
             return 0;
         }
     }
-    public function select_as($skey, $sval="", $escape=1)
+    public function select_as($skey, $sval='')
     {
         if (is_array($skey)) {
             foreach ($skey as $k=>$v) {
@@ -152,13 +157,12 @@ class SENE_MySQLi_Engine
     }
     public function query($sql, $cache_enabled=0, $flushcache=0, $type="object")
     {
-        //die($sql);
         if ($cache_enabled) {
-            $name = "";
+            $name = '';
             $names = explode("from", strtolower($sql));
             if (isset($names[1])) {
                 $name = trim($names[1]);
-                $name = strtr($name,'`', "");
+                $name = strtr($name, '`', '');
                 $names = explode(' ', $name);
 
                 if (isset($names[0])) {
@@ -170,8 +174,7 @@ class SENE_MySQLi_Engine
             if (!empty($name)) {
                 $cache=$name."-".md5($sql).".json";
             }
-            //die(SENECACHE.'/'.$cache);
-            //var_dump($cache_enabled);
+
             if (isset($GLOBALS['semeflush'])) {
                 $flushcache = $GLOBALS['semeflush'];
             }
@@ -179,13 +182,11 @@ class SENE_MySQLi_Engine
                 $cache_enabled = $GLOBALS['semecache'];
             }
             if ($flushcache) {
-                //die("deleted");
                 if (file_exists(SENECACHE.'/'.$cache)) {
                     unlink(SENECACHE.'/'.$cache);
                 }
             }
             if (file_exists(SENECACHE.'/'.$cache)) {
-                //die("wololo");
                 $fp = fopen(SENECACHE.'/'.$cache, "r");
                 $str = fread($fp, filesize(SENECACHE.'/'.$cache));
                 fclose($fp);
@@ -196,7 +197,6 @@ class SENE_MySQLi_Engine
                 if ($res) {
                     $dataz=array();
                     if ($type=="array") {
-                        //die($type);
                         while ($data=$res->fetch_array()) {
                             array_push($dataz, $data);
                         }
@@ -211,24 +211,21 @@ class SENE_MySQLi_Engine
                     }
                     $res->free();
                     $str = json_encode($dataz);
-                    //die($str);
                     $fp = fopen(SENECACHE.'/'.$cache, "w+");
                     fwrite($fp, $str);
                     fclose($fp);
                     return $dataz;
                 } else {
                     $this->debug($sql);
-                    trigger_error('Error: '.$this->__mysqli->error.' -- SQL: '.$sql);
+                    trigger_error(TEM_ERR.': '.$this->__mysqli->error.'. '.$sql, E_USER_NOTICE);
                     return $this->fieldvalue;
                 }
             }
         } else {
-            //die("else");
             $res = $this->__mysqli->query($sql);
             if ($res) {
                 $dataz=array();
                 if ($type=="array") {
-                    //die($type);
                     while ($data=$res->fetch_array()) {
                         array_push($dataz, $data);
                     }
@@ -249,14 +246,14 @@ class SENE_MySQLi_Engine
                 return $dataz;
             } else {
                 $this->debug($sql);
-                trigger_error('Error: '.$this->__mysqli->error.' -- SQL: '.$sql);
+                trigger_error(TEM_ERR.': '.$this->__mysqli->error.'. '.$sql, E_USER_NOTICE);
                 return $this->fieldvalue;
             }
         }
     }
-    public function select($sql="", $cache_enabled=0, $flushcache=0, $type="object")
+
+    public function select($sql='', $cache_enabled=0, $flushcache=0, $type="object")
     {
-        //
         $exp1 = 0;
         $exp2 = 0;
         if (!is_array($sql)) {
@@ -330,20 +327,15 @@ class SENE_MySQLi_Engine
     *            bisa juga not like%,%like,%like%
     * -----------------------------------------------------------
     */
-    public function where($params, $params2="", $operand="AND", $comp="=", $bracket=0, $bracket2=0)
+    public function where($params, $params2='', $operand="AND", $comp='=', $bracket=0, $bracket2=0)
     {
-        //die("params: ".$params);
-        //die("params2: ".$params2);
-        //die("operand: ".$operand);
-        //die("comp: ".$comp);
         $comp = strtolower($comp);
-        $c="=";
+        $c='=';
         $operand = strtoupper($operand);
         if (is_array($params)) {
             $comp = $operand;
             $comp = strtolower($comp);
             $operand = $params2;
-            //die("comp: ".$comp);
             foreach ($params as $k=>$v) {
                 switch ($comp) {
                     case "like":
@@ -391,41 +383,41 @@ class SENE_MySQLi_Engine
                         break;
                     case "%notlike":
                         $c= "NOT LIKE";
-                        $val = '%'.$v."";
+                        $val = '%'.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case "!=":
-                        $c= "<>";
-                        $val = ''.$v."";
+                    case '!=':
+                        $c= '<>';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case "<>":
-                        $c= "<>";
-                        $val = ''.$v."";
+                    case '<>':
+                        $c= '<>';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case ">=":
-                        $c= ">=";
-                        $val = ''.$v."";
+                    case '>=':
+                        $c= '>=';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case "<=":
-                        $c= "<=";
-                        $val = ''.$v."";
+                    case '<=':
+                        $c= '<=';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case ">":
-                        $c= ">";
-                        $val = ''.$v."";
+                    case '>':
+                        $c= '>';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
-                    case "<":
-                        $c= "<";
-                        $val = ''.$v."";
+                    case '<':
+                        $c= '<';
+                        $val = ''.$v.'';
                         $val = $this->esc($val);
                         break;
                     default:
-                        $c = "=";
+                        $c = '=';
                         $val = $this->esc($v);
                 }
 
@@ -454,7 +446,7 @@ class SENE_MySQLi_Engine
             unset($v);
             unset($k);
             unset($val);
-        } elseif (!empty($params) && !empty($params2)) {
+        } elseif (strlen($params) && strlen($params2)) {
             $val = $params2;
             $v = $params2;
 
@@ -483,13 +475,11 @@ class SENE_MySQLi_Engine
                 case 'like%':
                     $c= "LIKE";
                     $val = ''.$v.'%';
-                    //die($val);
                     $val = $this->esc($val);
-                    //die($val);
                     break;
                 case '%like':
                     $c= "LIKE";
-                    $val = '%'.$v."";
+                    $val = '%'.$v.'';
                     $val = $this->esc($val);
                     break;
                 case 'like%%':
@@ -523,46 +513,45 @@ class SENE_MySQLi_Engine
                     break;
                 case "%notlike":
                     $c= "NOT LIKE";
-                    $val = '%'.$v."";
+                    $val = '%'.$v.'';
                     $val = $this->esc($val);
                     break;
-                case "!=":
-                    $c= "<>";
-                    $val = ''.$v."";
+                case '!=':
+                    $c= '<>';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
-                case "<>":
-                    $c= "<>";
-                    $val = ''.$v."";
+                case '<>':
+                    $c= '<>';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
-                case ">=":
-                    $c= ">=";
-                    $val = ''.$v."";
+                case '>=':
+                    $c= '>=';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
-                case "<=":
-                    $c= "<=";
-                    $val = ''.$v."";
+                case '<=':
+                    $c= '<=';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
-                case ">":
-                    $c= ">";
-                    $val = ''.$v."";
+                case '>':
+                    $c= '>';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
-                case "<":
-                    $c= "<";
-                    $val = ''.$v."";
+                case '<':
+                    $c= '<';
+                    $val = ''.$v.'';
                     $val = $this->esc($val);
                     break;
                 default:
-                    if ($v=="IS NULL" || $v=="is null") {
-                        $v = strtoupper($v);
-                        $c = "";
-                        $val = $v;
+                    if (strtoupper(trim($v)) == "IS NULL" || strtoupper(trim($v)) == "IS NOT NULL") {
+                        $c = '';
+                        $val = strtoupper($v);
                     } else {
-                        $c = "=";
+                        $c = '=';
                         $val = $this->esc($v);
                     }
             }
@@ -579,16 +568,15 @@ class SENE_MySQLi_Engine
         }
         return $this;
     }
-    public function where_as($params, $params2="", $operand="AND", $comp="=", $bracket=0, $bracket2=0)
+    public function where_as($params, $params2='', $operand="AND", $comp='=', $bracket=0, $bracket2=0)
     {
         $comp = strtolower($comp);
-        $c="=";
+        $c='=';
         $operand = strtoupper($operand);
         if (is_array($params)) {
             $comp = $operand;
             $comp = strtolower($comp);
             $operand = $params2;
-            //die("comp: ".$comp);
             foreach ($params as $k=>$v) {
                 switch ($comp) {
                     case "like":
@@ -639,48 +627,48 @@ class SENE_MySQLi_Engine
                         $val = '\'%'.$v.'\'';
                         $val = ($val);
                         break;
-                    case "!=":
-                        $c= "<>";
-                        $val = ''.$v."";
+                    case '!=':
+                        $c= '<>';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
-                    case "<>":
-                        $c= "<>";
-                        $val = ''.$v."";
+                    case '<>':
+                        $c= '<>';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
-                    case ">=":
-                        $c= ">=";
-                        $val = ''.$v."";
+                    case '>=':
+                        $c= '>=';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
-                    case "<=":
-                        $c= "<=";
-                        $val = ''.$v."";
+                    case '<=':
+                        $c= '<=';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
-                    case ">":
-                        $c= ">";
-                        $val = ''.$v."";
+                    case '>':
+                        $c= '>';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
-                    case "<":
-                        $c= "<";
-                        $val = ''.$v."";
+                    case '<':
+                        $c= '<';
+                        $val = ''.$v.'';
                         $val = ($val);
                         break;
                     default:
-                        $c = "=";
+                        $c = '=';
                         $val = ($v);
                 }
 
                 if ($bracket) {
                     $this->in_where .= " ( ";
                 }
-                $this->in_where .= ''.$k."";
+                $this->in_where .= ''.$k.'';
                 unset($kst);
 
-                $this->in_where .= ' '.$c.' '.$val."";
+                $this->in_where .= ' '.$c.' '.$val.'';
                 if ($bracket2) {
                     $this->in_where .= " ) ";
                 }
@@ -690,7 +678,7 @@ class SENE_MySQLi_Engine
             unset($v);
             unset($k);
             unset($val);
-        } elseif (!empty($params) && !empty($params2)) {
+        } elseif (strlen($params) && strlen($params2)) {
             $val = $params2;
             $v = $params2;
 
@@ -706,7 +694,7 @@ class SENE_MySQLi_Engine
                 }
                 $this->in_where = rtrim($this->in_where, ".");
             } else {
-                $this->in_where .= ''.$params."";
+                $this->in_where .= ''.$params.'';
                 unset($kst);
             }
 
@@ -760,53 +748,52 @@ class SENE_MySQLi_Engine
                     $val = '\'%'.$v.'\'';
                     $val = ($val);
                     break;
-                case "!=":
-                    $c= "<>";
-                    $val = ''.$v."";
+                case '!=':
+                    $c= '<>';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case "<>":
-                    $c= "<>";
-                    $val = ''.$v."";
+                case '<>':
+                    $c= '<>';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case ">":
-                    $c= ">";
-                    $val = ''.$v."";
+                case '>':
+                    $c= '>';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case ">=":
-                    $c= ">=";
-                    $val = ''.$v."";
+                case '>=':
+                    $c= '>=';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case "<":
-                    $c= "<";
-                    $val = ''.$v."";
+                case '<':
+                    $c= '<';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case "<=":
-                    $c= "<=";
-                    $val = ''.$v."";
+                case '<=':
+                    $c= '<=';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case ">":
-                    $c= ">";
-                    $val = ''.$v."";
+                case '>':
+                    $c= '>';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
-                case "<":
-                    $c= "<";
-                    $val = ''.$v."";
+                case '<':
+                    $c= '<';
+                    $val = ''.$v.'';
                     $val = ($val);
                     break;
                 default:
-                    if ($v=="IS NULL" || $v=="is null") {
-                        $v = strtoupper($v);
-                        $c = "";
-                        $val = $v;
+                    if (strtoupper(trim($v)) == "IS NULL" || strtoupper(trim($v)) == "IS NOT NULL") {
+                        $c = '';
+                        $val = strtoupper($v);
                     } else {
-                        $c = "=";
+                        $c = '=';
                         $val = $v;
                     }
             }
@@ -816,7 +803,7 @@ class SENE_MySQLi_Engine
             }
             $this->in_where .=  ' '.$operand.' ';
 
-            $this->in_where = trim($this->in_where, "=");
+            $this->in_where = trim($this->in_where, '=');
 
             unset($c);
             unset($v);
@@ -836,17 +823,17 @@ class SENE_MySQLi_Engine
         }
         return $this;
     }
-    public function from($table, $as="")
+    public function from($table, $as='')
     {
         if (empty($table)) {
-            trigger_error("tabel name required");
+            trigger_error(TEM_ERR.': table name required', E_USER_ERROR);
             die();
         }
         if (!empty($as)) {
             $as = strtolower($as);
             if (isset($this->as_from[$as])) {
                 if ($this->as_from[$as] != $table) {
-                    trigger_error('Table alias "'.$as.'" for "'.$this->as_from[$as].'" has been used, please change!');
+                    trigger_error(TEM_ERR.': Table alias "'.$as.'" for "'.$this->as_from[$as].'" has been used, please change!');
                     foreach ($this->as_from as $k=>$v) {
                         trigger_error($k.': '.$v);
                     }
@@ -862,7 +849,7 @@ class SENE_MySQLi_Engine
     public function setTableAlias($as)
     {
         if (empty($as)) {
-            trigger_error("table alias required");
+            trigger_error(TEM_ERR.': table alias required.', E_USER_WARNING);
         }
         $this->as_from[$as] = $this->table;
         return $this;
@@ -893,37 +880,52 @@ class SENE_MySQLi_Engine
         $this->limit_b = 0;
         return $this;
     }
-    public function limit($a, $b="")
-    {
-        $this->is_limit=1;
-        if (empty($b) && !empty($a)) {
-            $b = $a;
-            $a = 0;
-        }
-        $this->limit_a=$a;
-        $this->limit_b=$b;
-        return $this;
-    }
-    public function page($page, $page_size="")
-    {
-        if (!empty($page_size) && empty($page)) {
-            $this->is_limit=1;
-            $this->limit_a=0;
-            $this->limit_b=$page_size;
-        } elseif (empty($page_size) && !empty($page)) {
-            $this->is_limit=1;
-            $this->limit_a=0;
-            $this->limit_b=$page;
-        } elseif (!empty($page_size) && !empty($page)) {
-            $this->is_limit = 1;
-            $this->limit_a = ($page * $page_size) - $page_size;
-            if ($page == 1) {
-                $this->limit_a = ($page * $page_size) - $page_size;
-            }
-            $this->limit_b = $page_size;
-        }
-        return $this;
-    }
+
+  	/**
+  	 * Set current limit offset
+  	 * @param  int    $a    Offset / Row Count, value range integer >= 0
+  	 * @param  int    $b  	Row count, value range integer >= 0
+  	 * @return object       return this class
+  	 */
+  	public function limit($a,$b=''){
+  		$this->is_limit=1;
+  		$a = (int) $a;
+  		$b = (int) $b;
+  		if($a > 0 && $b <= 0){
+  			$b = $a;
+  			$a = 0;
+  		}
+  		$this->limit_a = $a;
+  		$this->limit_b = $b;
+  		return $this;
+  	}
+
+  	/**
+  	 * Set current page and page size
+  	 * @param  int    $page       Current page number, value range integer >= 0
+  	 * @param  int    $page_size  Page size number, value range integer >= 0
+  	 * @return object             return this class
+  	 */
+  	public function page($page,$page_size=''){
+  		$page = (int) $page;
+  		$page_size = (int) $page_size;
+  		if($page_size > 0 && $page <= 0){
+  			$this->is_limit = 1;
+  			$this->limit_a  = 0;
+  			$this->limit_b  = $page_size;
+  		}else if($page_size <= 0 && $page > 0){
+  			$this->is_limit = 1;
+  			$this->limit_a = 0;
+  			$this->limit_b = $page;
+  		}else if($page_size > 0 && $page > 0){
+  			$this->is_limit = 1;
+  			$this->limit_a = ($page * $page_size) - $page_size;
+  			if($page == 1) $this->limit_a = ($page * $page_size) - $page_size;
+  			$this->limit_b = $page_size;
+  		}
+  		return $this;
+  	}
+
     public function limitpage($page, $pagesize=10)
     {
         $this->is_limit = 0;
@@ -931,7 +933,7 @@ class SENE_MySQLi_Engine
         $this->pagesize = $pagesize;
         return $this;
     }
-    public function get($tipe="object", $is_debug="")
+    public function get($tipe="object", $is_debug='')
     {
         $this->in_select = rtrim($this->in_select, ", ");
         if (empty($this->in_select)) {
@@ -945,12 +947,12 @@ class SENE_MySQLi_Engine
                 $sql .= ' '.$table_alias.' ';
                 foreach ($this->join as $j) {
                     $sql .= strtoupper($j->method).' JOIN '.$j->table.' ON ';
-                    foreach($j->on as $o){
-                      $sql .= '('.$o.') ';
+                    foreach ($j->on as $o) {
+                        $sql .= '('.$o.') ';
                     }
                 }
             } else {
-                trigger_error('Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");');
+                trigger_error(TEM_ERR.': Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");', E_USER_WARNING);
                 die();
             }
         } else {
@@ -968,7 +970,7 @@ class SENE_MySQLi_Engine
                     $sql .= '`'.$j->table.'` '.$j->table_as.' ON '.$j->on.' ';
                 }
             } else {
-                trigger_error('JOIN MULTI: Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");');
+                trigger_error(TEM_ERR.': Please use alias for main table first in JOIN MULTI, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");', E_USER_WARNING);
                 die();
             }
         }
@@ -989,22 +991,16 @@ class SENE_MySQLi_Engine
             $sql .= " ORDER BY ".$this->in_order;
         }
 
-        if (empty($all)) {
-            if ($this->is_limit) {
-                $a = $this->limit_a;
-                $b = $this->limit_b;
-                $sql .= ' LIMIT '.$a.", ".$b;
-            } else {
-                $b = $this->pagesize;
-                if ((empty($page) || $page=="1" || $page==1)) {
-                    if (!empty($b)) {
-                        $sql .= ' LIMIT '.$b;
-                    }
-                } else {
-                    $a = $this->page;
-                    $sql .= ' LIMIT '.$a.','.$b;
-                }
-            }
+        if ($this->is_limit) {
+            $a = $this->limit_a;
+            $b = $this->limit_b;
+            $sql .= ' LIMIT '.$this->limit_a.", ".$this->limit_b;
+        } else {
+          if($this->page<=1){
+            if($this->pagesize > 0) $sql .= " LIMIT ".$this->pagesize;
+          }else{
+            $sql .= " LIMIT ".$this->page.", ".$this->pagesize;
+          }
         }
 
         $cache_save = 0;
@@ -1025,7 +1021,7 @@ class SENE_MySQLi_Engine
         return $res;
     }
 
-    public function get_first($tipe="object", $is_debug="")
+    public function get_first($tipe="object", $is_debug='')
     {
         $this->in_select = rtrim($this->in_select, ", ");
         if (empty($this->in_select)) {
@@ -1034,19 +1030,19 @@ class SENE_MySQLi_Engine
         $sql = 'SELECT '.$this->in_select.' FROM `'.$this->table.'`';
 
         if (count($this->join) > 0) {
-          $table_alias = array_search($this->table, $this->as_from);
-          if ($table_alias !== 0) {
-              $sql .= ' '.$table_alias.' ';
-              foreach ($this->join as $j) {
-                  $sql .= strtoupper($j->method).' JOIN '.$j->table.' ON ';
-                  foreach($j->on as $o){
-                    $sql .= '('.$o.') ';
-                  }
-              }
-          } else {
-              trigger_error('Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");');
-              die();
-          }
+            $table_alias = array_search($this->table, $this->as_from);
+            if ($table_alias !== 0) {
+                $sql .= ' '.$table_alias.' ';
+                foreach ($this->join as $j) {
+                    $sql .= strtoupper($j->method).' JOIN '.$j->table.' ON ';
+                    foreach ($j->on as $o) {
+                        $sql .= '('.$o.') ';
+                    }
+                }
+            } else {
+                trigger_error(TEM_ERR.': Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");', E_USER_WARNING);
+                die();
+            }
         } else {
             $table_alias = array_search($this->table, $this->as_from);
             if ($table_alias !== 0) {
@@ -1062,7 +1058,7 @@ class SENE_MySQLi_Engine
                     $sql .= '`'.$j->table.'` '.$j->table_as.' ON '.$j->on.' ';
                 }
             } else {
-                trigger_error('JOIN MULTI: Please use alias for main table first, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");');
+                trigger_error(TEM_ERR.': Please use alias for main table first in JOIN MULTI, you can set alias using $this->db->setTableAlias("YOURALIAS") OR $this->db->from("tabelname","tablealias");', E_USER_WARNING);
                 die();
             }
         }
@@ -1112,10 +1108,10 @@ class SENE_MySQLi_Engine
     }
     public function flushQuery()
     {
-        $this->in_select = "";
-        $this->in_where = "";
-        $this->in_order = "";
-        $this->in_group = "";
+        $this->in_select = '';
+        $this->in_where = '';
+        $this->in_order = '';
+        $this->in_group = '';
         $this->pagesize = 0;
         $this->page = 0;
         $this->is_limit = 0;
@@ -1143,14 +1139,14 @@ class SENE_MySQLi_Engine
     public function insert_multi($table, $datas=array(), $is_debug=0)
     {
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
         $sql = 'INSERT INTO `'.$table.'`'.' (';
 
         foreach ($datas as $data) {
             if (!is_array($data)) {
-                trigger_error('Only accepted array!');
+                trigger_error(TEM_ERR.' Only accepted array!');
                 die();
             }
             foreach ($data as $key=>$val) {
@@ -1185,17 +1181,15 @@ class SENE_MySQLi_Engine
     }
     public function insert_ignore_multi($table, $datas=array(), $is_debug=0)
     {
-        //$multi_array=0;
-
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
         $sql = 'INSERT IGNORE INTO `'.$table.'`'.'(';
 
         foreach ($datas as $data) {
             if (!is_array($data)) {
-                trigger_error('Only accepted array!');
+                trigger_error(TEM_ERR.': Only accepted array!');
                 die();
             }
             foreach ($data as $key=>$val) {
@@ -1230,10 +1224,9 @@ class SENE_MySQLi_Engine
     }
     public function insert($table, $datas=array(), $multi_array=0, $is_debug=0)
     {
-        //$multi_array=0;
         $this->last_id = 0;
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
         if ($multi_array) {
@@ -1248,13 +1241,15 @@ class SENE_MySQLi_Engine
             $sql .= ') VALUES(';
 
             foreach ($datas as $key=>$val) {
-                if ($val=='NOW()' || $val=='now()') {
-                    $sql .=''.$val.',';
-                } elseif (strtolower($val)=='null') {
-                    $sql .='NULL,';
-                } else {
-                    $sql .=''.$this->esc($val).',';
-                }
+              if ($val=='NOW()' || $val=='now()') {
+                $sql .=''.$val.',';
+              } else if (strtolower($val)=='null') {
+                $sql .='NULL,';
+              } else if (stripos($val, "AES_ENCRYPT(") !== false || stripos($val, "AES_DECRYPT(") !== false) {
+                $sql .= $val.',';
+              } else {
+                $sql .=''.$this->esc($val).',';
+              }
             }
             $sql = rtrim($sql, ',');
             $sql .= ');';
@@ -1272,7 +1267,7 @@ class SENE_MySQLi_Engine
     public function update($table, $datas=array(), $is_debug=0)
     {
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
 
@@ -1280,6 +1275,8 @@ class SENE_MySQLi_Engine
         foreach ($datas as $key=>$val) {
             if ($val=='now()' || $val=='NOW()' || $val=="NULL" || $val=='null') {
                 $sql .='`'.$key.'` = '.$val.',';
+            } else if (stripos($val, "AES_ENCRYPT(") !== false || stripos($val, "AES_DECRYPT(") !== false) {
+                $sql .= $val.',';
             } else {
                 $sql .='`'.$key.'` = '.$this->esc($val).',';
             }
@@ -1309,7 +1306,7 @@ class SENE_MySQLi_Engine
     public function delete($table, $is_debug=0)
     {
         if (empty($table)) {
-            trigger_error("Missing table name while deleting");
+            trigger_error(TEM_ERR.': Missing table name while deleting');
             die();
         }
 
@@ -1349,13 +1346,13 @@ class SENE_MySQLi_Engine
 
     public function join_as($tbl, $reff, $method='left')
     {
-      $join = new stdClass();
-      $join->method = strtoupper(trim($method));
-      $join->table = $tbl;
-      $join->on = array($reff);
-      $this->join[] = $join;
-      $this->in_join = $this->in_join+1;
-      return $this;
+        $join = new stdClass();
+        $join->method = strtoupper(trim($method));
+        $join->table = $tbl;
+        $join->on = array($reff);
+        $this->join[] = $join;
+        $this->in_join = $this->in_join+1;
+        return $this;
     }
 
     public function composite_create($key1, $operator, $key2, $method="AND", $bracket_open=0, $bracket_close=0)
@@ -1369,7 +1366,7 @@ class SENE_MySQLi_Engine
         $composite->bracket_close = $bracket_close;
         return $composite;
     }
-    public function join_composite($table, $table_alias, $composites=array(), $method="")
+    public function join_composite($table, $table_alias, $composites=array(), $method='')
     {
         $method = strtoupper($method);
         switch ($method) {
@@ -1386,7 +1383,7 @@ class SENE_MySQLi_Engine
                 $method = 'RIGHT';
                 break;
             default:
-                $method="";
+                $method='';
                 break;
         }
         //set table alias
@@ -1401,7 +1398,7 @@ class SENE_MySQLi_Engine
 
         //building composite
         if (!is_array($composites)) {
-            trigger_error("JOIN_COMPOSITE the composites parameter must be array");
+            trigger_error(TEM_ERR.': JOIN_COMPOSITE the composites parameter must be array!');
         }
         $composites_count = count($composites);
         $composite_i = 0;
@@ -1441,17 +1438,16 @@ class SENE_MySQLi_Engine
     public function between($key, $val1, $val2, $is_not=0)
     {
         $this->in_where .= '(';
-        $this->in_where .= ' '.$key."";
+        $this->in_where .= ' '.$key.'';
         if ($is_not) {
             $this->in_where .= " NOT ";
         }
-        $this->in_where .= " BETWEEN ".$val1." AND ".$val2."";
+        $this->in_where .= " BETWEEN ".$val1." AND ".$val2.'';
         $this->in_where .= ") AND ";
         return $this;
     }
     public function group_by($params)
     {
-        //die($params);
         if (is_array($params)) {
             foreach ($params as $k=>$v) {
                 $this->in_group .= " GROUP BY ".$v.", ";
@@ -1464,16 +1460,15 @@ class SENE_MySQLi_Engine
 
     public function replace($table, $datas=array(), $multi_array=0, $is_debug=0)
     {
-        //$multi_array=0;
         $this->last_id = 0;
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
         if ($multi_array) {
             $this->replace_multi($table, $datas, $is_debug);
         } else {
-            $sql = "REPLACE INTO `".$table."`(";
+            $sql = 'REPLACE INTO `'.$table.'`'.' (';
 
             foreach ($datas as $key=>$val) {
                 $sql .='`'.$key."`,";
@@ -1505,17 +1500,15 @@ class SENE_MySQLi_Engine
     }
     public function replace_multi($table, $datas=array(), $is_debug=0)
     {
-        //$multi_array=0;
-
         if (!is_array($datas)) {
-            trigger_error('Only accepted array!');
+            trigger_error(TEM_ERR.': Only accepted array!');
             die();
         }
-        $sql = "REPLACE INTO `".$table.'` '.'(';
+        $sql = 'REPLACE INTO `'.$table.'`'.' (';
 
         foreach ($datas as $data) {
             if (!is_array($data)) {
-                trigger_error('Only accepted array!');
+                trigger_error(TEM_ERR.': Only accepted array!');
                 die();
             }
             foreach ($data as $key=>$val) {
@@ -1580,7 +1573,7 @@ class SENE_MySQLi_Engine
     {
         $res = $this->__mysqli->character_set_name();
         if (!$res) {
-            trigger_error('Cant get charset '.$char_set.' to database.');
+            trigger_error(TEM_ERR.': Cannot get charset from database.');
         }
         return $res;
     }
@@ -1588,7 +1581,7 @@ class SENE_MySQLi_Engine
     {
         $res = $this->__mysqli->set_charset($char_set);
         if (!$res) {
-            trigger_error('Cant change charset from '.$this->__mysqli->character_set_name().' to '.$char_set.' to database.');
+            trigger_error(TEM_ERR.': Cant change charset from '.$this->__mysqli->character_set_name().' to '.$char_set.' to database.');
         }
         return 1;
     }
@@ -1618,7 +1611,7 @@ class SENE_MySQLi_Engine
      */
     public function __encrypt($s)
     {
-        return 'AES_ENCRYPT('.$this->db->esc($s).',"'.$this->db->enckey.'")';
+        return 'AES_ENCRYPT('.$this->db->esc($s).',"'.$this->config->database->enckey.'")';
     }
 
     /**
@@ -1628,6 +1621,6 @@ class SENE_MySQLi_Engine
      */
     public function __decrypt($s)
     {
-        return 'AES_DECRYPT('.$s.',"'.$this->db->enckey.'")';
+        return 'AES_DECRYPT('.$s.',"'.$this->config->database->enckey.'")';
     }
 }
