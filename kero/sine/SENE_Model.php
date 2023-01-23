@@ -1,10 +1,17 @@
 <?php
 /**
+ * @author: Daeng Rosanda
+ * @package SemeFramework
+ * @since SemeFramework 3.0.0
+ */
+
+/**
  * Abstract class for Sene_Model
  */
+#[AllowDynamicProperties]
 abstract class SENE_Model
 {
-    protected $db;
+    public $db;
     protected $directories;
     protected $config;
     public $field = array();
@@ -40,7 +47,7 @@ abstract class SENE_Model
      */
     public function __encrypt($val)
     {
-        return 'AES_ENCRYPT('.$this->db->esc($val).',"'.$this->db->enckey.'")';
+        return 'AES_ENCRYPT('.$this->db->esc($val).',"'.$this->config->database->enckey.'")';
     }
 
     /**
@@ -50,6 +57,6 @@ abstract class SENE_Model
      */
     public function __decrypt($key)
     {
-        return 'AES_DECRYPT('.$key.',"'.$this->db->enckey.'")';
+        return 'AES_DECRYPT('.$key.',"'.$this->config->database->enckey.'")';
     }
 }
